@@ -545,7 +545,7 @@
         let tasks = [];
         let contentItems = [];
 
-        // Cargar y Sincronizar Tareas en Tiempo Real (Solo desde la Nube)
+        // Cargar y Sincronizar Tareas en Tiempo Real
         db.collection("tasks").onSnapshot((snapshot) => {
             tasks = snapshot.docs.map(doc => ({ idDoc: doc.id, ...doc.data() }));
             renderTable();
@@ -860,7 +860,7 @@
     </div>
 </div>
 
-<!-- Modal Formulario de Pautas con Opción de Eliminar -->
+<!-- Modal Formulario de Pautas con Opción de Repetición de Mailing -->
 <div class="modal-overlay" id="contentModal">
     <div class="modal-box">
         <div class="modal-header">
@@ -872,11 +872,22 @@
 
             <div class="form-group">
                 <label>Tipo de Evento / Actividad</label>
-                <select class="form-control" id="contentType" required>
+                <select class="form-control" id="contentType" onchange="toggleMailingRecurrenceField()" required>
                     <option value="GRABACIÓN">📹 Pauta de Grabación (Video/Fotos)</option>
                     <option value="RRSS">📱 Publicación RRSS (Reel/Parrilla)</option>
                     <option value="MAILING">📧 Mailing (Envío / Reporte Entregas)</option>
                     <option value="EVENTO">🎪 Cobertura de Evento Especial</option>
+                </select>
+            </div>
+
+            <!-- CAMPO DINÁMICO DE REPETICIÓN SÓLO PARA MAILING -->
+            <div class="form-group" id="mailingRecurrenceGroup" style="display: none;">
+                <label>Frecuencia de Repetición del Envío</label>
+                <select class="form-control" id="contentRecurrence">
+                    <option value="NONE">🟢 Sin repetición (Envío único)</option>
+                    <option value="WEEKLY">🔁 Cada semana (Próximas 4 semanas)</option>
+                    <option value="BIWEEKLY">🌓 Cada 15 días (Próximos 2 meses)</option>
+                    <option value="MONTHLY">📅 Cada mes (Próximos 3 meses)</option>
                 </select>
             </div>
 
@@ -1226,7 +1237,7 @@
                         <div class="calendar-event-tag ${badgeClass}" 
                              draggable="true" 
                              ondragstart="onDragEventStart(event, ${e.id})"
-                             onclick="event.stopPropagation(); openContentModal(${e.id})" 
+                             onclick="event.stopPropagation(); openContentModal('${e.id}')" 
                              title="${e.title} (${peopleStr}) • ${e.location}">
                             <span>${displayText}</span>
                         </div>
@@ -1261,6 +1272,14 @@
         element.classList.toggle('selected');
     }
 
+    function toggleMailingRecurrenceField() {
+        const type = document.getElementById('contentType').value;
+        const group = document.getElementById('mailingRecurrenceGroup');
+        if (group) {
+            group.style.display = (type === 'MAILING') ? 'block' : 'none';
+        }
+    }
+
     function getSelectedPeople() {
         const selectedChips = document.querySelectorAll('.person-chip.selected');
         const people = [];
@@ -1277,33 +1296,39 @@
 
         const deleteBtn = document.getElementById('deleteContentBtn');
 
-        if (id) {
-            const item = contentItems.find(x => x.id === id);
-            document.getElementById('contentModalTitle').innerText = 'Editar Pauta / Contenido';
-            document.getElementById('contentId').value = item.id;
-            document.getElementById('contentType').value = item.type;
-            document.getElementById('contentTitle').value = item.title;
-            document.getElementById('contentDate').value = item.date;
-            document.getElementById('contentDuration').value = item.duration || 1;
-            document.getElementById('contentLocation').value = item.location;
-            document.getElementById('contentNotes').value = item.notes || '';
+        if (id !== null && id !== undefined && id !== '') {
+            const item = contentItems.find(x => x.id == id);
+            if (item) {
+                document.getElementById('contentModalTitle').innerText = 'Editar Pauta / Contenido';
+                document.getElementById('contentId').value = item.id;
+                document.getElementById('contentType').value = item.type;
+                document.getElementById('contentTitle').value = item.title;
+                document.getElementById('contentDate').value = item.date;
+                document.getElementById('contentDuration').value = item.duration || 1;
+                document.getElementById('contentLocation').value = item.location || '';
+                document.getElementById('contentNotes').value = item.notes || '';
+                document.getElementById('contentRecurrence').value = item.recurrence || 'NONE';
 
-            if (item.owners) {
-                document.querySelectorAll('.person-chip').forEach(chip => {
-                    const chipName = chip.innerText.split('(')[0].trim();
-                    if (item.owners.includes(chipName)) chip.classList.add('selected');
-                });
+                if (item.owners) {
+                    document.querySelectorAll('.person-chip').forEach(chip => {
+                        const chipName = chip.innerText.split('(')[0].trim();
+                        if (item.owners.includes(chipName)) chip.classList.add('selected');
+                    });
+                }
+                if (deleteBtn) deleteBtn.style.display = 'block';
             }
-            deleteBtn.style.display = 'block';
         } else {
             document.getElementById('contentModalTitle').innerText = 'Nueva Pauta / Contenido';
             document.getElementById('contentForm').reset();
             document.getElementById('contentId').value = '';
             document.getElementById('contentDate').value = presetDate || '2026-08-18';
             document.getElementById('contentDuration').value = 1;
+            document.getElementById('contentRecurrence').value = 'NONE';
             document.querySelectorAll('.person-chip')[0].classList.add('selected');
-            deleteBtn.style.display = 'none';
+            if (deleteBtn) deleteBtn.style.display = 'none';
         }
+
+        toggleMailingRecurrenceField();
     }
 
     function closeContentModal() {
@@ -1319,39 +1344,84 @@
         const duration = parseInt(document.getElementById('contentDuration').value) || 1;
         const location = document.getElementById('contentLocation').value.trim();
         const notes = document.getElementById('contentNotes').value.trim();
+        const recurrence = document.getElementById('contentRecurrence').value;
         const owners = getSelectedPeople();
 
         if (id) {
             const existingItem = contentItems.find(x => x.id == id);
             if (existingItem && existingItem.idDoc) {
                 db.collection("contentItems").doc(existingItem.idDoc).update({
-                    type, title, date, duration, location, notes, owners
+                    type, title, date, duration, location, notes, owners, recurrence
                 });
             }
         } else {
-            db.collection("contentItems").add({ id: Date.now(), type, title, date, duration, location, owners, notes });
+            // Manejar generación automática si hay repetición seleccionada en Mailing
+            let datesToCreate = [date];
+
+            if (type === 'MAILING' && recurrence !== 'NONE') {
+                const startDateObj = new Date(date + 'T00:00:00');
+                
+                if (recurrence === 'WEEKLY') { // 4 semanas
+                    for (let i = 1; i <= 3; i++) {
+                        let nextDate = new Date(startDateObj);
+                        nextDate.setDate(startDateObj.getDate() + (i * 7));
+                        datesToCreate.push(nextDate.toISOString().split('T')[0]);
+                    }
+                } else if (recurrence === 'BIWEEKLY') { // 15 días (4 envíos = 2 meses)
+                    for (let i = 1; i <= 3; i++) {
+                        let nextDate = new Date(startDateObj);
+                        nextDate.setDate(startDateObj.getDate() + (i * 15));
+                        datesToCreate.push(nextDate.toISOString().split('T')[0]);
+                    }
+                } else if (recurrence === 'MONTHLY') { // 3 meses
+                    for (let i = 1; i <= 2; i++) {
+                        let nextDate = new Date(startDateObj);
+                        nextDate.setMonth(startDateObj.getMonth() + i);
+                        datesToCreate.push(nextDate.toISOString().split('T')[0]);
+                    }
+                }
+            }
+
+            datesToCreate.forEach((d, idx) => {
+                db.collection("contentItems").add({
+                    id: Date.now() + idx,
+                    type,
+                    title: datesToCreate.length > 1 ? `${title} (Envío ${idx + 1})` : title,
+                    date: d,
+                    duration,
+                    location,
+                    owners,
+                    notes,
+                    recurrence
+                });
+            });
         }
 
         closeContentModal();
     }
 
     function deleteCurrentContentModal() {
-        const id = Number(document.getElementById('contentId').value);
-        if (id) {
-            deleteContentItem(id);
+        const idVal = document.getElementById('contentId').value;
+        if (idVal) {
+            deleteContentItem(idVal);
             closeContentModal();
         }
     }
 
     function deleteContentItem(id) {
         if (confirm('¿Deseas eliminar esta pauta o publicación?')) {
-            const item = contentItems.find(x => x.id === id);
-            if (item && item.idDoc) {
-                db.collection("contentItems").doc(item.idDoc).delete();
-            } else {
-                contentItems = contentItems.filter(x => x.id !== id);
-                renderCalendarView();
+            const item = contentItems.find(x => x.id == id);
+            if (item) {
+                if (item.idDoc) {
+                    db.collection("contentItems").doc(item.idDoc).delete();
+                } else {
+                    db.collection("contentItems").where("id", "==", Number(id)).get().then(snapshot => {
+                        snapshot.forEach(doc => doc.ref.delete());
+                    });
+                }
             }
+            contentItems = contentItems.filter(x => x.id != id);
+            renderCalendarView();
         }
     }
 
