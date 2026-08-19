@@ -949,7 +949,10 @@
         'ALIANZAS COMERCIALES': 'ALI', 'LTICKET': 'LTI'
     };
 
-    let currentNavDate = new Date(2026, 7, 1);
+    // FECHA REAL DINÁMICA
+    let currentNavDate = new Date();
+    currentNavDate.setDate(1); // Primer día del mes actual
+
     let draggedEventId = null;
 
     let statusChartInstance = null;
@@ -975,7 +978,6 @@
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // CALCULAR 2 DÍAS HÁBILES DESPUÉS DE UNA FECHA (OMITE SÁBADOS Y DOMINGOS)
     function addBusinessDays(dateStr, days = 2) {
         let current = new Date(dateStr + 'T00:00:00');
         let added = 0;
@@ -1175,6 +1177,13 @@
 
         const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
 
+        // OBTENER LA FECHA DÍA DE HOY REAL
+        const todayObj = new Date();
+        const todayYear = todayObj.getFullYear();
+        const todayMonth = String(todayObj.getMonth() + 1).padStart(2, '0');
+        const todayDay = String(todayObj.getDate()).padStart(2, '0');
+        const todayRealStr = `${todayYear}-${todayMonth}-${todayDay}`;
+
         for (let i = 0; i < startDayOffset; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.className = 'calendar-day-cell';
@@ -1189,7 +1198,7 @@
             const dayFormatted = day < 10 ? '0' + day : day;
             const dateStr = `${year}-${monthFormatted}-${dayFormatted}`;
 
-            const isToday = dateStr === '2026-08-18';
+            const isToday = dateStr === todayRealStr;
 
             const cell = document.createElement('div');
             cell.className = `calendar-day-cell ${isToday ? 'today' : ''}`;
@@ -1279,7 +1288,8 @@
     }
 
     function resetToCurrentMonth() {
-        currentNavDate = new Date(2026, 7, 1);
+        currentNavDate = new Date();
+        currentNavDate.setDate(1);
         renderCalendarView();
     }
 
@@ -1337,10 +1347,11 @@
                 if (deleteBtn) deleteBtn.style.display = 'block';
             }
         } else {
+            const todayDefault = new Date().toISOString().split('T')[0];
             document.getElementById('contentModalTitle').innerText = 'Nueva Pauta / Contenido';
             document.getElementById('contentForm').reset();
             document.getElementById('contentId').value = '';
-            document.getElementById('contentDate').value = presetDate || '2026-08-18';
+            document.getElementById('contentDate').value = presetDate || todayDefault;
             document.getElementById('contentDuration').value = 1;
             document.getElementById('contentRecurrence').value = 'NONE';
             document.querySelectorAll('.person-chip')[0].classList.add('selected');
@@ -1404,7 +1415,6 @@
                 const baseTimestamp = Date.now() + (idx * 10);
                 const envName = datesToCreate.length > 1 ? `${title} (${idx + 1})` : title;
                 
-                // 1. Crear la tarjeta de Envío Mailtrap
                 db.collection("contentItems").add({
                     id: baseTimestamp,
                     type,
@@ -1418,7 +1428,6 @@
                     isReport: false
                 });
 
-                // 2. Si es Mailing, crear Automáticamente la tarjeta de Reporte Métricas Mail
                 if (type === 'MAILING') {
                     const reportDate = addBusinessDays(d, 2);
                     db.collection("contentItems").add({
