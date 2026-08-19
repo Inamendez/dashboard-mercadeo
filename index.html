@@ -149,6 +149,19 @@
         }
         .btn-primary:hover { background: var(--orange-primary-hover); transform: translateY(-1px); }
 
+        .btn-danger {
+            background: var(--stat-red-bg);
+            color: var(--stat-red);
+            border: 1px solid #FCA5A5;
+            padding: 12px 22px;
+            border-radius: var(--radius-btn);
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover { background: #FEE2E2; }
+
         .user-profile {
             display: flex;
             align-items: center;
@@ -419,7 +432,6 @@
             pointer-events: none;
         }
 
-        /* EVENTOS EN CALENDARIO (SPAN MULTIDÍA Y MAILING) */
         .calendar-event-tag {
             font-size: 10.5px;
             font-weight: 700;
@@ -441,9 +453,8 @@
         .type-grabacion { background: #E0F2FE; color: #0369A1; border-left: 3px solid #0284C7; }
         .type-rrss { background: #FCE7F3; color: #BE185D; border-left: 3px solid #DB2777; }
         .type-evento { background: #FEF3C7; color: #B45309; border-left: 3px solid #D97706; }
-        .type-mailing { background: #EDE9FE; color: #6D28D9; border-left: 3px solid #8B5CF6; } /* CATEGORÍA MAILING */
+        .type-mailing { background: #EDE9FE; color: #6D28D9; border-left: 3px solid #8B5CF6; }
 
-        /* CHIPS DE SELECCIÓN DE INVOLUCRADOS */
         .people-selector {
             display: flex;
             flex-wrap: wrap;
@@ -517,7 +528,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Configuración oficial de tu proyecto Firebase extraída de la captura
         const firebaseConfig = {
             apiKey: "AIzaSyDm_gezaxmx86EuK8mXMqb5XI0NgLh2i3A",
             authDomain: "racing-lp.firebaseapp.com",
@@ -529,18 +539,16 @@
             measurementId: "G-EX5W8Z4PSC"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let isTasksLoaded = false;
-        let isCalendarLoaded = false;
+        let tasks = [];
+        let contentItems = [];
 
-        // Cargar y Sincronizar Tareas en Tiempo Real (Respetando Borrados)
+        // Cargar y Sincronizar Tareas en Tiempo Real (Solo desde la Nube)
         db.collection("tasks").onSnapshot((snapshot) => {
             tasks = snapshot.docs.map(doc => ({ idDoc: doc.id, ...doc.data() }));
             renderTable();
-            isTasksLoaded = true;
         });
 
         // Cargar y Sincronizar Pautas/Calendario en Tiempo Real
@@ -549,15 +557,12 @@
             if (document.getElementById('tab-calendar') && document.getElementById('tab-calendar').classList.contains('active')) {
                 renderCalendarView();
             }
-            isCalendarLoaded = true;
         });
     </script>
-
 </head>
 <body>
 
 <div class="app-container">
-    <!-- Header Bar Principal -->
     <header class="top-bar">
         <div class="brand-container">
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAAuVJREFUeAHtlktsEkEYx/9DTEPihT1ohItQb2BibRsPSlJ8XbSNnjy3njyY2Ist6UXq3cfBgze9qlFbH+dCgk1qUgVTOTTy0ESwXkCjglhY55th2YHdbuVkD/yT5ZudfXz/+X4zswB99dXXfxaz65yJzsWg4xp60IUvLzDy/V0vjxTYUwRcdleYzsYohsPHEJ29KuJ28tY3gL1+4PoScOMtsNsDXL4n2wcjwPgV4G6ex+lWEsQpWAxMT8c8OvSIpmmYGD8DTfNgcDDgmFz78w2+GjcwdUsmCwwBxyeBE5Oy7efHxdvS4JFzxmMJWwNu9+YQRZ93X7svl8vBSYPVj7JByUn5FE96yP7m9wkZm1tUoKE3z1MMhYLtvmw2Dycd+PVJjpTKTiqkTDNfC3LkbQNx+k2xBRRsDbjAhHVvqwLVWg2lUglOEhUIRcyOfNpMWkh3VmMtTvxTZj5FKn+fzyf6cjnn0RN/OhAaMzuNSpBWFmR1SEv3ZWRYNC7vUl82MLAZodjNf2L8LEZHh/Hs+Uusrr5RH7Hnv2e/eQPhuDPF+/ymgYZZgQ4DOmtGaGNQ+ZPC4aNytJoH3Qr9WHfmT4byKfWRNn9SBwIGuf5V/prHTGqHw/d7o5P/WsLkLydctxLqSbsCxB+oD3XzN9rGOVWjWq0JFF6e3MKfKkAjp+PBvDW9Sy4/iwE7/sViEadPnWwll3PBwEEGxOhJKn86LjlsXI1OA20EjOlii1L51zgCQ1k+epqIJGNZ2vJ3Vpzzr9ga0AGxVrbiT2bcbrdofy5KA2IDUvmvLGIbpbs7hIFoNObnFhz5q8pkMoK/u1mz8neSjgVbAw3UIxS717/xERLtgMm1yCsgRk9S+dPEc5bFoZiELv755TsgypWKmHhU7mRyGSPDh8VNDx89RjAY5BXxIvlqGeVyBaGf6/INrxflVkubjbMs/EniD8nM7BwtcD960PyHmxLBv4phnj1BDH311ddO018L9Slk2AMiAgAAAABJRU5ErkJggg==" alt="Latin Pagos Logo" class="brand-logo-img">
@@ -567,7 +572,6 @@
             </div>
         </div>
 
-        <!-- Pestañas Principales -->
         <div class="tab-navigation">
             <button class="tab-btn active" onclick="switchTab('dashboard', this)">
                 <span>📊</span> Dashboard
@@ -596,7 +600,6 @@
 
     <!-- PESTAÑA 1: DASHBOARD DE TAREAS Y MATRIZ -->
     <div id="tab-dashboard" class="tab-content active">
-        <!-- KPI Cards -->
         <section class="kpi-grid">
             <div class="kpi-card highlight">
                 <div class="kpi-header">
@@ -635,7 +638,6 @@
             </div>
         </section>
 
-        <!-- Dos Tortas de Análisis -->
         <section class="analytics-grid">
             <div class="dashboard-box">
                 <div class="box-header">
@@ -656,7 +658,6 @@
             </div>
         </section>
 
-        <!-- Tabla de Actividades -->
         <section class="dashboard-box">
             <div class="box-header">
                 <div class="box-title">Matriz Operativa de Actividades</div>
@@ -725,7 +726,7 @@
         </section>
     </div>
 
-    <!-- PESTAÑA 2: VISTA CALENDARIO CON NAVEGACIÓN Y DRAG & DROP -->
+    <!-- PESTAÑA 2: VISTA CALENDARIO -->
     <div id="tab-calendar" class="tab-content">
         <div class="dashboard-box">
             <div class="calendar-header">
@@ -752,7 +753,6 @@
                 <div class="calendar-day-head">SÁB</div>
                 <div class="calendar-day-head">DOM</div>
 
-                <!-- Casillas de Días Generadas por JS -->
                 <div id="calendarMonthDays" style="display: contents;"></div>
             </div>
         </div>
@@ -774,9 +774,7 @@
                 <div class="box-header">
                     <div class="box-title">Nivel de Saturación del Equipo</div>
                 </div>
-                <div id="teamSaturationsList" style="display: flex; flex-direction: column; gap: 14px; padding-top: 4px;">
-                    <!-- Rellenado dinámicamente -->
-                </div>
+                <div id="teamSaturationsList" style="display: flex; flex-direction: column; gap: 14px; padding-top: 4px;"></div>
             </div>
         </div>
 
@@ -784,9 +782,7 @@
             <div class="box-header">
                 <div class="box-title">Detalle de Asignaciones por Integrante</div>
             </div>
-            <div id="teamCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
-                <!-- Rellenado dinámicamente -->
-            </div>
+            <div id="teamCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;"></div>
         </div>
     </div>
 </div>
@@ -864,7 +860,7 @@
     </div>
 </div>
 
-<!-- Modal Formulario de Pautas con Duración Múltiples Días y Categoría Mailing -->
+<!-- Modal Formulario de Pautas con Opción de Eliminar -->
 <div class="modal-overlay" id="contentModal">
     <div class="modal-box">
         <div class="modal-header">
@@ -922,6 +918,7 @@
             </div>
 
             <div class="modal-footer">
+                <button type="button" class="btn-danger" id="deleteContentBtn" style="display: none; margin-right: auto;" onclick="deleteCurrentContentModal()">🗑️ Eliminar Pauta</button>
                 <button type="button" class="btn-icon" style="padding: 10px 16px;" onclick="closeContentModal()">Cancelar</button>
                 <button type="submit" class="btn-primary">Guardar en Calendario</button>
             </div>
@@ -937,50 +934,7 @@
         'ALIANZAS COMERCIALES': 'ALI', 'LTICKET': 'LTI'
     };
 
-    let tasks = [
-        { id: "PYC-2", area: "PERSONAS Y CULTURA", desc: "Campaña Interna de Valores y Clima Organizacional", resp: "Rachel Cedeño (Community Manager)", state: "Completado", reqDate: "2026-07-29", dueDate: "2026-08-13" },
-        { id: "FIN-2", area: "FINANZAS", desc: "Infografía de Resultados Económicos para Inversionistas", resp: "Ashley Pereira (Diseñadora)", state: "Pendiente", reqDate: "2026-08-08", dueDate: "2026-08-15" },
-        { id: "FIN-1", area: "FINANZAS", desc: "Reporte de ROI y Presentación Presupuesto Anual", resp: "Andreina Mendez (Coordinadora)", state: "Completado", reqDate: "2026-08-03", dueDate: "2026-08-16" },
-        { id: "OPE-1", area: "OPERACIONES", desc: "Señalética e Identidad Visual en Sucursales/Depósitos", resp: "Daniel Fasolino (Líder)", state: "Pendiente", reqDate: "2026-08-10", dueDate: "2026-08-17" },
-        { id: "VEN-1", area: "GESTIÓN DE VENTAS", desc: "Catálogo Digital de Productos y Fichas Técnicas", resp: "Ashley Pereira (Diseñadora)", state: "En Proceso", reqDate: "2026-08-11", dueDate: "2026-08-18" },
-        { id: "ATC-1", area: "ATENCIÓN AL CLIENTE", desc: "Plantillas de Respuesta e Iconografía para Chatbots", resp: "Ashley Pereira (Diseñadora)", state: "En Revisión / En Espera", reqDate: "2026-08-15", dueDate: "2026-08-19" },
-        { id: "MER-1", area: "MERCADEO", desc: "Estrategia Campaña Q4 & Lanzamiento de Marca", resp: "Andreina Mendez (Coordinadora)", state: "En Proceso", reqDate: "2026-08-08", dueDate: "2026-09-02" }
-    ];
-
-    let contentItems = [
-        {
-            id: 101,
-            type: "GRABACIÓN",
-            title: "Pauta Grabación BNC",
-            date: "2026-08-18",
-            duration: 2, // Ocupa 2 días
-            location: "09:30 AM",
-            owners: ["Rachel Cedeño", "Ashley Pereira"],
-            notes: "Tomas de apoyo con cliente en agencia Chacao."
-        },
-        {
-            id: 102,
-            type: "MAILING",
-            title: "Mailing Promocional BNC & Reporte",
-            date: "2026-08-20",
-            duration: 3, // Envío y días de métrica
-            location: "Envío Masivo Email",
-            owners: ["Rachel Cedeño", "Daniel Fasolino"],
-            notes: "Envío el 20 y entrega de reporte de aperturas el 22."
-        },
-        {
-            id: 103,
-            type: "RRSS",
-            title: "Reel App Lanzamiento",
-            date: "2026-08-25",
-            duration: 1,
-            location: "06:00 PM",
-            owners: ["Rachel Cedeño"],
-            notes: "Vídeo dinámico de 30s mostrando la app."
-        }
-    ];
-
-    let currentNavDate = new Date(2026, 7, 1); // Agosto 2026
+    let currentNavDate = new Date(2026, 7, 1);
     let draggedEventId = null;
 
     let statusChartInstance = null;
@@ -1042,7 +996,7 @@
         const filterResp = document.getElementById('filterResp').value;
 
         let filtered = processed.filter(t => {
-            const matchesSearch = t.desc.toLowerCase().includes(search) || t.resp.toLowerCase().includes(search) || t.id.toLowerCase().includes(search);
+            const matchesSearch = (t.desc || '').toLowerCase().includes(search) || (t.resp || '').toLowerCase().includes(search) || (t.id || '').toLowerCase().includes(search);
             const matchesArea = filterArea === 'ALL' || t.area === filterArea;
             const matchesStatus = filterStatus === 'ALL' || t.semaforo === filterStatus || t.state === filterStatus;
             const matchesResp = filterResp === 'ALL' || t.resp === filterResp;
@@ -1176,26 +1130,23 @@
         });
     }
 
-    // --- LÓGICA DE CALENDARIO DINÁMICO NATIVO (MESES, DRAG & DROP Y MULTIDÍAS) ---
     function renderCalendarView() {
         const container = document.getElementById('calendarMonthDays');
         const monthLabel = document.getElementById('calendarCurrentMonthLabel');
         container.innerHTML = '';
 
         const year = currentNavDate.getFullYear();
-        const month = currentNavDate.getMonth(); // 0-11
+        const month = currentNavDate.getMonth();
 
         const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         monthLabel.innerText = `📅 ${monthNames[month]} ${year}`;
 
-        // Obtener primer día del mes (0=Dom, 1=Lun...)
         const firstDay = new Date(year, month, 1);
-        let startDayOffset = firstDay.getDay() - 1; // Ajuste para iniciar en Lunes
+        let startDayOffset = firstDay.getDay() - 1;
         if (startDayOffset === -1) startDayOffset = 6;
 
         const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // Celdas vacías previas
         for (let i = 0; i < startDayOffset; i++) {
             const emptyCell = document.createElement('div');
             emptyCell.className = 'calendar-day-cell';
@@ -1205,26 +1156,23 @@
             container.appendChild(emptyCell);
         }
 
-        // Celdas de días
         for (let day = 1; day <= totalDaysInMonth; day++) {
             const monthFormatted = (month + 1) < 10 ? '0' + (month + 1) : (month + 1);
             const dayFormatted = day < 10 ? '0' + day : day;
             const dateStr = `${year}-${monthFormatted}-${dayFormatted}`;
 
-            const isToday = dateStr === '2026-08-18'; // Referencia de hoy
+            const isToday = dateStr === '2026-08-18';
 
             const cell = document.createElement('div');
             cell.className = `calendar-day-cell ${isToday ? 'today' : ''}`;
             cell.dataset.date = dateStr;
 
-            // Evento Click directo en el día para agregar pauta
             cell.onclick = (e) => {
                 if (e.target === cell || e.target.classList.contains('calendar-day-number')) {
                     openContentModal(null, dateStr);
                 }
             };
 
-            // Soporte Drag & Drop
             cell.ondragover = (e) => {
                 e.preventDefault();
                 cell.classList.add('drag-over');
@@ -1239,12 +1187,15 @@
                     const ev = contentItems.find(x => x.id === draggedEventId);
                     if (ev) {
                         ev.date = dateStr;
-                        renderCalendarView();
+                        if (ev.idDoc) {
+                            db.collection("contentItems").doc(ev.idDoc).update({ date: dateStr });
+                        } else {
+                            renderCalendarView();
+                        }
                     }
                 }
             };
 
-            // Buscar eventos que cubren este día (por inicio o extensión)
             const cellDateObj = new Date(year, month, day);
 
             let eventsHTML = '';
@@ -1277,7 +1228,7 @@
                              ondragstart="onDragEventStart(event, ${e.id})"
                              onclick="event.stopPropagation(); openContentModal(${e.id})" 
                              title="${e.title} (${peopleStr}) • ${e.location}">
-                            ${displayText}
+                            <span>${displayText}</span>
                         </div>
                     `;
                 }
@@ -1324,6 +1275,8 @@
         document.getElementById('contentModal').style.display = 'flex';
         document.querySelectorAll('.person-chip').forEach(c => c.classList.remove('selected'));
 
+        const deleteBtn = document.getElementById('deleteContentBtn');
+
         if (id) {
             const item = contentItems.find(x => x.id === id);
             document.getElementById('contentModalTitle').innerText = 'Editar Pauta / Contenido';
@@ -1341,13 +1294,15 @@
                     if (item.owners.includes(chipName)) chip.classList.add('selected');
                 });
             }
+            deleteBtn.style.display = 'block';
         } else {
             document.getElementById('contentModalTitle').innerText = 'Nueva Pauta / Contenido';
             document.getElementById('contentForm').reset();
             document.getElementById('contentId').value = '';
             document.getElementById('contentDate').value = presetDate || '2026-08-18';
             document.getElementById('contentDuration').value = 1;
-            document.querySelectorAll('.person-chip')[0].classList.add('selected'); // Rachel por defecto
+            document.querySelectorAll('.person-chip')[0].classList.add('selected');
+            deleteBtn.style.display = 'none';
         }
     }
 
@@ -1380,12 +1335,16 @@
         closeContentModal();
     }
 
-    function editContentItem(id) {
-        openContentModal(id);
+    function deleteCurrentContentModal() {
+        const id = Number(document.getElementById('contentId').value);
+        if (id) {
+            deleteContentItem(id);
+            closeContentModal();
+        }
     }
 
     function deleteContentItem(id) {
-        if (confirm('¿Deseas eliminar este registro?')) {
+        if (confirm('¿Deseas eliminar esta pauta o publicación?')) {
             const item = contentItems.find(x => x.id === id);
             if (item && item.idDoc) {
                 db.collection("contentItems").doc(item.idDoc).delete();
@@ -1456,7 +1415,6 @@
                 if (t.idDoc) {
                     db.collection("tasks").doc(t.idDoc).delete();
                 } else {
-                    // Si no tiene idDoc asignado aún, buscarlo en Firestore por su campo id
                     db.collection("tasks").where("id", "==", id).get().then(snapshot => {
                         snapshot.forEach(doc => doc.ref.delete());
                     });
