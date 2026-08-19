@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --orange-primary: #FF5500;
+            --orange-primary: #FF5100;
             --orange-primary-hover: #E04B00;
             --orange-light: #FFF2EC;
             --orange-card-bg: linear-gradient(135deg, #FF5500 0%, #E04B00 100%);
@@ -454,6 +454,7 @@
         .type-rrss { background: #FCE7F3; color: #BE185D; border-left: 3px solid #DB2777; }
         .type-evento { background: #FEF3C7; color: #B45309; border-left: 3px solid #D97706; }
         .type-mailing { background: #EDE9FE; color: #6D28D9; border-left: 3px solid #8B5CF6; }
+        .type-reunion { background: #DCFCE7; color: #166534; border-left: 3px solid #22C55E; }
 
         .people-selector {
             display: flex;
@@ -568,7 +569,7 @@
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAAuVJREFUeAHtlktsEkEYx/9DTEPihT1ohItQb2BibRsPSlJ8XbSNnjy3njyY2Ist6UXq3cfBgze9qlFbH+dCgk1qUgVTOTTy0ESwXkCjglhY55th2YHdbuVkD/yT5ZudfXz/+X4zswB99dXXfxaz65yJzsWg4xp60IUvLzDy/V0vjxTYUwRcdleYzsYohsPHEJ29KuJ28tY3gL1+4PoScOMtsNsDXL4n2wcjwPgV4G6ex+lWEsQpWAxMT8c8OvSIpmmYGD8DTfNgcDDgmFz78w2+GjcwdUsmCwwBxyeBE5Oy7efHxdvS4JFzxmMJWwNu9+YQRZ93X7svl8vBSYPVj7JByUn5FE96yP7m9wkZm1tUoKE3z1MMhYLtvmw2Dycd+PVJjpTKTiqkTDNfC3LkbQNx+k2xBRRsDbjAhHVvqwLVWg2lUglOEhUIRcyOfNpMWkh3VmMtTvxTZj5FKn+fzyf6cjnn0RN/OhAaMzuNSpBWFmR1SEv3ZWRYNC7vUl82MLAZodjNf2L8LEZHh/Hs+Uusrr5RH7Hnv2e/eQPhuDPF+/ymgYZZgQ4DOmtGaGNQ+ZPC4aNytJoH3Qr9WHfmT4byKfWRNn9SBwIGuf5V/prHTGqHw/d7o5P/WsLkLydctxLqSbsCxB+oD3XzN9rGOVWjWq0JFF6e3MKfKkAjp+PBvDW9Sy4/iwE7/sViEadPnWwll3PBwEEGxOhJKn86LjlsXI1OA20EjOlii1L51zgCQ1k+epqIJGNZ2vJ3Vpzzr9ga0AGxVrbiT2bcbrdofy5KA2IDUvmvLGIbpbs7hIFoNObnFhz5q8pkMoK/u1mz8neSjgVbAw3UIxS717/xERLtgMm1yCsgRk9S+dPEc5bFoZiELv755TsgypWKmHhU7mRyGSPDh8VNDx89RjAY5BXxIvlqGeVyBaGf6/INrxflVkubjbMs/EniD8nM7BwtcD960PyHmxLBv4phnj1BDH311ddO018L9Slk2AMiAgAAAABJRU5ErkJggg==" alt="Latin Pagos Logo" class="brand-logo-img">
             <div class="header-info">
                 <h1>Latin Pagos <span>Mercadeo</span></h1>
-                <p>Dashboard y Calendario Interactivo</p>
+                <p>Dashboard y Calendario interactivo</p>
             </div>
         </div>
 
@@ -577,7 +578,7 @@
                 <span>📊</span> Dashboard
             </button>
             <button class="tab-btn" onclick="switchTab('calendar', this)">
-                <span>📅</span> Calendario Pautas & RRSS
+                <span>📅</span> Calendario Pautas y RRSS
             </button>
             <button class="tab-btn" onclick="switchTab('team', this)">
                 <span>👥</span> Carga de Equipo
@@ -860,11 +861,11 @@
     </div>
 </div>
 
-<!-- Modal Formulario Simplificado Exclusivo para Mailtrap y Pautas -->
+<!-- Modal Formulario Simplificado Exclusivo para Mailtrap, Reuniones y Pautas -->
 <div class="modal-overlay" id="contentModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 id="contentModalTitle">Nueva Pauta / Evento / Mailing</h3>
+            <h3 id="contentModalTitle">Nueva Pauta / Evento / Mailing / Reunión</h3>
             <button class="close-modal" onclick="closeContentModal()">&times;</button>
         </div>
         <form id="contentForm" onsubmit="saveContentItem(event)">
@@ -876,6 +877,7 @@
                     <option value="GRABACIÓN">📹 Pauta de Grabación (Video/Fotos)</option>
                     <option value="RRSS">📱 Publicación RRSS (Reel/Parrilla)</option>
                     <option value="MAILING">📧 Mailing (Envío Mailtrap)</option>
+                    <option value="REUNION">🤝 Reunión (Trabajo / Cliente)</option>
                     <option value="EVENTO">🎪 Cobertura de Evento Especial</option>
                 </select>
             </div>
@@ -897,18 +899,15 @@
                 </div>
             </div>
 
-            <!-- FRECUENCIA DE REPETICIÓN SÓLO PARA MAILING -->
+            <!-- FRECUENCIA DE REPETICIÓN PARA MAILING Y REUNIONES -->
             <div class="form-group" id="mailingRecurrenceGroup" style="display: none;">
                 <label>Frecuencia de Repetición</label>
                 <select class="form-control" id="contentRecurrence">
-                    <option value="NONE">🟢 Sin repetición (Envío único)</option>
+                    <option value="NONE">🟢 Sin repetición (Evento único)</option>
                     <option value="WEEKLY">🔁 Cada semana (Próximas 4 semanas)</option>
                     <option value="BIWEEKLY">🌓 Cada 15 días (Próximos 2 meses)</option>
                     <option value="MONTHLY">📅 Cada mes (Próximos 3 meses)</option>
                 </select>
-                <p style="font-size: 11px; color: var(--orange-primary); font-weight: 600; margin-top: 4px;">
-                    💡 La tarjeta de "Reporte Métricas Mail" se creará automáticamente 2 días hábiles después del envío.
-                </p>
             </div>
 
             <div class="form-group" id="contentLocationGroup">
@@ -929,7 +928,7 @@
 
             <div class="form-group">
                 <label id="contentNotesLabel">Detalles / Guión / Asunto</label>
-                <textarea class="form-control" id="contentNotes" rows="3" placeholder="Notas adicionales del envío..."></textarea>
+                <textarea class="form-control" id="contentNotes" rows="3" placeholder="Notas adicionales del envío o reunión..."></textarea>
             </div>
 
             <div class="modal-footer">
@@ -949,7 +948,6 @@
         'ALIANZAS COMERCIALES': 'ALI', 'LTICKET': 'LTI'
     };
 
-    // FECHA REAL DINÁMICA
     let currentNavDate = new Date();
     currentNavDate.setDate(1);
 
@@ -1246,6 +1244,7 @@
                     if (e.type === 'RRSS') badgeClass = 'type-rrss';
                     if (e.type === 'EVENTO') badgeClass = 'type-evento';
                     if (e.type === 'MAILING') badgeClass = 'type-mailing';
+                    if (e.type === 'REUNION') badgeClass = 'type-reunion';
 
                     const peopleStr = e.owners ? e.owners.join(', ') : 'Rachel Cedeño';
 
@@ -1299,13 +1298,47 @@
     function toggleMailingRecurrenceField() {
         const type = document.getElementById('contentType').value;
         const isMailing = type === 'MAILING';
+        const isReunion = type === 'REUNION';
 
-        document.getElementById('mailingRecurrenceGroup').style.display = isMailing ? 'block' : 'none';
-        document.getElementById('contentDurationGroup').style.display = isMailing ? 'none' : 'block';
+        const recurrenceGroup = document.getElementById('mailingRecurrenceGroup');
+        if (recurrenceGroup) {
+            recurrenceGroup.style.display = (isMailing || isReunion) ? 'block' : 'none';
+        }
 
-        document.getElementById('contentTitleLabel').innerText = isMailing ? 'Título / Tema del Mailing' : 'Título / Tema del Contenido';
-        document.getElementById('contentDateLabel').innerText = isMailing ? 'Fecha de Envío (Mailtrap)' : 'Fecha Inicio';
-        document.getElementById('contentTitle').placeholder = isMailing ? 'Ej: Morosidad o Cobranzas' : 'Ej: Grabación Reel de Puntos de Venta';
+        const durationGroup = document.getElementById('contentDurationGroup');
+        if (durationGroup) {
+            durationGroup.style.display = (isMailing || isReunion) ? 'none' : 'block';
+        }
+
+        const titleLabel = document.getElementById('contentTitleLabel');
+        const titleInput = document.getElementById('contentTitle');
+        const dateLabel = document.getElementById('contentDateLabel');
+        const notesLabel = document.getElementById('contentNotesLabel');
+        const locationLabel = document.getElementById('contentLocationLabel');
+        const locationInput = document.getElementById('contentLocation');
+
+        if (isReunion) {
+            if (titleLabel) titleLabel.innerText = 'Título / Motivo de la Reunión';
+            if (titleInput) titleInput.placeholder = 'Ej: Status Semanal de Mercadeo / Cliente BNC';
+            if (dateLabel) dateLabel.innerText = 'Día de la Reunión';
+            if (notesLabel) notesLabel.innerText = 'Detalles Adicionales / Puntos a Tratar';
+            if (locationLabel) locationLabel.innerText = 'Hora / Enlace / Sala de Reuniones';
+            if (locationInput) locationInput.placeholder = 'Ej: 10:00 AM - Google Meet / Sala A';
+        } else if (isMailing) {
+            if (titleLabel) titleLabel.innerText = 'Título / Tema del Mailing';
+            if (titleInput) titleInput.placeholder = 'Ej: Morosidad o Cobranzas';
+            if (dateLabel) dateLabel.innerText = 'Fecha de Envío (Mailtrap)';
+            if (notesLabel) notesLabel.innerText = 'Detalles / Guión / Asunto';
+            if (locationLabel) locationLabel.innerText = 'Hora / Canal de Salida';
+            if (locationInput) locationInput.placeholder = 'Ej: 10:00 AM - Email Masivo Mailtrap';
+        } else {
+            if (titleLabel) titleLabel.innerText = 'Título / Tema del Contenido';
+            if (titleInput) titleInput.placeholder = 'Ej: Grabación Reel de Puntos de Venta';
+            if (dateLabel) dateLabel.innerText = 'Fecha Inicio';
+            if (notesLabel) notesLabel.innerText = 'Detalles / Guión / Notas';
+            if (locationLabel) locationLabel.innerText = 'Hora / Lugar / Canal';
+            if (locationInput) locationInput.placeholder = 'Ej: 10:00 AM - Agencia Chacao';
+        }
     }
 
     function getSelectedPeople() {
@@ -1386,7 +1419,7 @@
         } else {
             let datesToCreate = [date];
 
-            if (type === 'MAILING' && recurrence !== 'NONE') {
+            if ((type === 'MAILING' || type === 'REUNION') && recurrence !== 'NONE') {
                 const startDateObj = new Date(date + 'T00:00:00');
                 
                 if (recurrence === 'WEEKLY') {
@@ -1413,12 +1446,18 @@
             datesToCreate.forEach((d, idx) => {
                 const baseTimestamp = Date.now() + (idx * 10);
                 const envName = datesToCreate.length > 1 ? `${title} (${idx + 1})` : title;
+                let formattedTitle = envName;
+
+                if (type === 'MAILING') {
+                    formattedTitle = `📧 Envío Mailtrap: ${envName}`;
+                } else if (type === 'REUNION') {
+                    formattedTitle = `🤝 Reunión: ${envName}`;
+                }
                 
-                // 1. Crear la tarjeta de Envío Mailtrap
                 db.collection("contentItems").add({
                     id: baseTimestamp,
                     type,
-                    title: `📧 Envío Mailtrap: ${envName}`,
+                    title: formattedTitle,
                     date: d,
                     duration: 1,
                     location,
@@ -1428,7 +1467,6 @@
                     isReport: false
                 });
 
-                // 2. Si es Mailing, crear Automáticamente la tarjeta de Reporte Métricas Mail
                 if (type === 'MAILING') {
                     const reportDate = addBusinessDays(d, 2);
                     db.collection("contentItems").add({
