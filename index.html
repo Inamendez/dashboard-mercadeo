@@ -907,7 +907,7 @@
                     <option value="MONTHLY">📅 Cada mes (Próximos 3 meses)</option>
                 </select>
                 <p style="font-size: 11px; color: var(--orange-primary); font-weight: 600; margin-top: 4px;">
-                    💡 El evento de "Entrega de Métricas" se creará automáticamente 2 días hábiles después del envío.
+                    💡 La tarjeta de "Reporte Métricas Mail" se creará automáticamente 2 días hábiles después del envío.
                 </p>
             </div>
 
@@ -1242,11 +1242,7 @@
                     const peopleStr = e.owners ? e.owners.join(', ') : 'Rachel Cedeño';
 
                     let displayText = e.title;
-                    if (e.isReport) {
-                        displayText = `📊 Reporte Métricas: ${e.title}`;
-                    } else if (e.type === 'MAILING') {
-                        displayText = `📧 Envío Mailtrap: ${e.title}`;
-                    } else if (duration > 1) {
+                    if (duration > 1 && !e.isReport && e.type !== 'MAILING') {
                         if (cellDateObj.getTime() === startDate.getTime()) displayText = `▶ ${e.title}`;
                         else if (cellDateObj.getTime() === endDate.getTime()) displayText = `➜ ${e.title} (Fin)`;
                         else displayText = `↔ ${e.title}`;
@@ -1404,35 +1400,36 @@
                 }
             }
 
-            // CREACIÓN DE ENVIOS Y SUS REPORTES AUTOMÁTICOS (+2 DÍAS HÁBILES)
             datesToCreate.forEach((d, idx) => {
-                const mailingId = Date.now() + (idx * 2);
+                const baseTimestamp = Date.now() + (idx * 10);
+                const envName = datesToCreate.length > 1 ? `${title} (${idx + 1})` : title;
                 
-                // 1. Crear el Evento de Envío
+                // 1. Crear la tarjeta de Envío Mailtrap
                 db.collection("contentItems").add({
-                    id: mailingId,
+                    id: baseTimestamp,
                     type,
-                    title: datesToCreate.length > 1 ? `${title} (${idx + 1})` : title,
+                    title: `Envío Mailtrap: ${envName}`,
                     date: d,
                     duration: 1,
                     location,
                     owners,
                     notes,
-                    recurrence
+                    recurrence,
+                    isReport: false
                 });
 
-                // 2. Si es Mailing, Generar Automáticamente el Evento de Reporte a los 2 Días Hábiles
+                // 2. Si es Mailing, crear Automáticamente la tarjeta de Reporte Métricas Mail
                 if (type === 'MAILING') {
                     const reportDate = addBusinessDays(d, 2);
                     db.collection("contentItems").add({
-                        id: mailingId + 1,
-                        type,
-                        title: datesToCreate.length > 1 ? `${title} (${idx + 1})` : title,
+                        id: baseTimestamp + 1,
+                        type: 'MAILING',
+                        title: `Reporte Métricas Mail: ${envName}`,
                         date: reportDate,
                         duration: 1,
-                        location: 'Reporte de Métricas',
+                        location: 'Mailtrap / Analytics',
                         owners,
-                        notes: `Entrega automática de métricas para el envío del ${d}`,
+                        notes: `Entrega automática de reporte de métricas para el envío realizado el ${d}`,
                         isReport: true
                     });
                 }
