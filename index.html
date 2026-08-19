@@ -951,7 +951,7 @@
 
     // FECHA REAL DINÁMICA
     let currentNavDate = new Date();
-    currentNavDate.setDate(1); // Primer día del mes actual
+    currentNavDate.setDate(1);
 
     let draggedEventId = null;
 
@@ -1177,7 +1177,6 @@
 
         const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // OBTENER LA FECHA DÍA DE HOY REAL
         const todayObj = new Date();
         const todayYear = todayObj.getFullYear();
         const todayMonth = String(todayObj.getMonth() + 1).padStart(2, '0');
@@ -1415,10 +1414,11 @@
                 const baseTimestamp = Date.now() + (idx * 10);
                 const envName = datesToCreate.length > 1 ? `${title} (${idx + 1})` : title;
                 
+                // 1. Crear la tarjeta de Envío Mailtrap
                 db.collection("contentItems").add({
                     id: baseTimestamp,
                     type,
-                    title: `Envío Mailtrap: ${envName}`,
+                    title: `📧 Envío Mailtrap: ${envName}`,
                     date: d,
                     duration: 1,
                     location,
@@ -1428,12 +1428,13 @@
                     isReport: false
                 });
 
+                // 2. Si es Mailing, crear Automáticamente la tarjeta de Reporte Métricas Mail
                 if (type === 'MAILING') {
                     const reportDate = addBusinessDays(d, 2);
                     db.collection("contentItems").add({
                         id: baseTimestamp + 1,
                         type: 'MAILING',
-                        title: `Reporte Métricas Mail: ${envName}`,
+                        title: `📊 Reporte Métricas: ${envName}`,
                         date: reportDate,
                         duration: 1,
                         location: 'Mailtrap / Analytics',
