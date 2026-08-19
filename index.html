@@ -432,7 +432,7 @@
             pointer-events: none;
         }
 
-        /* EVENTOS EN CALENDARIO (SPAN MULTIDÍA Y MAILING) */
+        /* EVENTOS EN CALENDARIO LIMPIOS SIN PAPELERA VISIBLE */
         .calendar-event-tag {
             font-size: 10.5px;
             font-weight: 700;
@@ -448,24 +448,8 @@
             user-select: none;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: transform 0.1s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         .calendar-event-tag:active { cursor: grabbing; transform: scale(0.98); }
-
-        .delete-event-btn {
-            opacity: 0.6;
-            font-size: 11px;
-            margin-left: 4px;
-            padding: 0 2px;
-            border-radius: 4px;
-            transition: opacity 0.2s, background 0.2s;
-        }
-        .delete-event-btn:hover {
-            opacity: 1;
-            background: rgba(0,0,0,0.1);
-        }
 
         .type-grabacion { background: #E0F2FE; color: #0369A1; border-left: 3px solid #0284C7; }
         .type-rrss { background: #FCE7F3; color: #BE185D; border-left: 3px solid #DB2777; }
@@ -546,7 +530,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Configuración oficial de tu proyecto Firebase extraída de la captura
+        // Configuración oficial de tu proyecto Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDm_gezaxmx86EuK8mXMqb5XI0NgLh2i3A",
             authDomain: "racing-lp.firebaseapp.com",
@@ -1217,7 +1201,7 @@
         });
     }
 
-    // --- RENDERING CALENDARIO CON OPCIÓN DIRECTA DE ELIMINAR ---
+    // --- RENDERING CALENDARIO CON ETIQUETAS LIMPIAS ---
     function renderCalendarView() {
         const container = document.getElementById('calendarMonthDays');
         const monthLabel = document.getElementById('calendarCurrentMonthLabel');
@@ -1317,7 +1301,6 @@
                              onclick="event.stopPropagation(); openContentModal(${e.id})" 
                              title="${e.title} (${peopleStr}) • ${e.location}">
                             <span>${displayText}</span>
-                            <span class="delete-event-btn" onclick="event.stopPropagation(); deleteContentItem(${e.id})">🗑️</span>
                         </div>
                     `;
                 }
