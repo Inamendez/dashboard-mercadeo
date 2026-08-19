@@ -860,7 +860,7 @@
     </div>
 </div>
 
-<!-- Modal Formulario de Pautas con Opción de Repetición de Mailing -->
+<!-- Modal Formulario Simplificado Exclusivo para Mailtrap y Pautas -->
 <div class="modal-overlay" id="contentModal">
     <div class="modal-box">
         <div class="modal-header">
@@ -875,41 +875,45 @@
                 <select class="form-control" id="contentType" onchange="toggleMailingRecurrenceField()" required>
                     <option value="GRABACIÓN">📹 Pauta de Grabación (Video/Fotos)</option>
                     <option value="RRSS">📱 Publicación RRSS (Reel/Parrilla)</option>
-                    <option value="MAILING">📧 Mailing (Envío / Reporte Entregas)</option>
+                    <option value="MAILING">📧 Mailing (Envío Mailtrap)</option>
                     <option value="EVENTO">🎪 Cobertura de Evento Especial</option>
                 </select>
             </div>
 
-            <!-- CAMPO DINÁMICO DE REPETICIÓN SÓLO PARA MAILING -->
+            <div class="form-group">
+                <label id="contentTitleLabel">Título / Tema del Contenido</label>
+                <input type="text" class="form-control" id="contentTitle" placeholder="Ej: Morosidad o Cobranzas" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label id="contentDateLabel">Fecha de Envío (Mailtrap)</label>
+                    <input type="date" class="form-control" id="contentDate" required>
+                </div>
+
+                <div class="form-group" id="contentDurationGroup">
+                    <label>Duración (Días Continuos)</label>
+                    <input type="number" class="form-control" id="contentDuration" value="1" min="1" max="14">
+                </div>
+            </div>
+
+            <!-- FRECUENCIA DE REPETICIÓN SÓLO PARA MAILING -->
             <div class="form-group" id="mailingRecurrenceGroup" style="display: none;">
-                <label>Frecuencia de Repetición del Envío</label>
+                <label>Frecuencia de Repetición</label>
                 <select class="form-control" id="contentRecurrence">
                     <option value="NONE">🟢 Sin repetición (Envío único)</option>
                     <option value="WEEKLY">🔁 Cada semana (Próximas 4 semanas)</option>
                     <option value="BIWEEKLY">🌓 Cada 15 días (Próximos 2 meses)</option>
                     <option value="MONTHLY">📅 Cada mes (Próximos 3 meses)</option>
                 </select>
+                <p style="font-size: 11px; color: var(--orange-primary); font-weight: 600; margin-top: 4px;">
+                    💡 El evento de "Entrega de Métricas" se creará automáticamente 2 días hábiles después del envío.
+                </p>
             </div>
 
-            <div class="form-group">
-                <label>Título / Tema del Contenido</label>
-                <input type="text" class="form-control" id="contentTitle" placeholder="Ej: Envío Mailing Agencias BNC o Grabación Reel" required>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Fecha Inicio</label>
-                    <input type="date" class="form-control" id="contentDate" required>
-                </div>
-                <div class="form-group">
-                    <label>Duración (Días Continuos)</label>
-                    <input type="number" class="form-control" id="contentDuration" value="1" min="1" max="14" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Hora / Lugar / Canal</label>
-                <input type="text" class="form-control" id="contentLocation" placeholder="Ej: 10:00 AM - Agencia Chacao o Email BNC">
+            <div class="form-group" id="contentLocationGroup">
+                <label id="contentLocationLabel">Hora / Lugar / Canal</label>
+                <input type="text" class="form-control" id="contentLocation" placeholder="Ej: 10:00 AM - Email Masivo Mailtrap">
             </div>
 
             <div class="form-group">
@@ -924,8 +928,8 @@
             </div>
 
             <div class="form-group">
-                <label>Detalles / Guión / Fechas de Reporte</label>
-                <textarea class="form-control" id="contentNotes" rows="3" placeholder="Puntos clave, fecha de envío y día de entrega de reporte de métricas..."></textarea>
+                <label id="contentNotesLabel">Detalles / Guión / Asunto</label>
+                <textarea class="form-control" id="contentNotes" rows="3" placeholder="Notas adicionales del envío..."></textarea>
             </div>
 
             <div class="modal-footer">
@@ -969,6 +973,19 @@
         const due = new Date(dueDateStr);
         const diffTime = due - today;
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    // CALCULAR 2 DÍAS HÁBILES DESPUÉS DE UNA FECHA (OMITE SÁBADOS Y DOMINGOS)
+    function addBusinessDays(dateStr, days = 2) {
+        let current = new Date(dateStr + 'T00:00:00');
+        let added = 0;
+        while (added < days) {
+            current.setDate(current.getDate() + 1);
+            if (current.getDay() !== 0 && current.getDay() !== 6) {
+                added++;
+            }
+        }
+        return current.toISOString().split('T')[0];
     }
 
     function getSemaforo(days, state) {
@@ -1222,14 +1239,16 @@
                     if (e.type === 'EVENTO') badgeClass = 'type-evento';
                     if (e.type === 'MAILING') badgeClass = 'type-mailing';
 
-                    const isFirstDay = cellDateObj.getTime() === startDate.getTime();
-                    const isLastDay = cellDateObj.getTime() === endDate.getTime();
                     const peopleStr = e.owners ? e.owners.join(', ') : 'Rachel Cedeño';
 
                     let displayText = e.title;
-                    if (duration > 1) {
-                        if (isFirstDay) displayText = `▶ ${e.title}`;
-                        else if (isLastDay) displayText = `➜ ${e.title} (Fin)`;
+                    if (e.isReport) {
+                        displayText = `📊 Reporte Métricas: ${e.title}`;
+                    } else if (e.type === 'MAILING') {
+                        displayText = `📧 Envío Mailtrap: ${e.title}`;
+                    } else if (duration > 1) {
+                        if (cellDateObj.getTime() === startDate.getTime()) displayText = `▶ ${e.title}`;
+                        else if (cellDateObj.getTime() === endDate.getTime()) displayText = `➜ ${e.title} (Fin)`;
                         else displayText = `↔ ${e.title}`;
                     }
 
@@ -1274,10 +1293,14 @@
 
     function toggleMailingRecurrenceField() {
         const type = document.getElementById('contentType').value;
-        const group = document.getElementById('mailingRecurrenceGroup');
-        if (group) {
-            group.style.display = (type === 'MAILING') ? 'block' : 'none';
-        }
+        const isMailing = type === 'MAILING';
+
+        document.getElementById('mailingRecurrenceGroup').style.display = isMailing ? 'block' : 'none';
+        document.getElementById('contentDurationGroup').style.display = isMailing ? 'none' : 'block';
+
+        document.getElementById('contentTitleLabel').innerText = isMailing ? 'Título / Tema del Mailing' : 'Título / Tema del Contenido';
+        document.getElementById('contentDateLabel').innerText = isMailing ? 'Fecha de Envío (Mailtrap)' : 'Fecha Inicio';
+        document.getElementById('contentTitle').placeholder = isMailing ? 'Ej: Morosidad o Cobranzas' : 'Ej: Grabación Reel de Puntos de Venta';
     }
 
     function getSelectedPeople() {
@@ -1355,25 +1378,24 @@
                 });
             }
         } else {
-            // Manejar generación automática si hay repetición seleccionada en Mailing
             let datesToCreate = [date];
 
             if (type === 'MAILING' && recurrence !== 'NONE') {
                 const startDateObj = new Date(date + 'T00:00:00');
                 
-                if (recurrence === 'WEEKLY') { // 4 semanas
+                if (recurrence === 'WEEKLY') {
                     for (let i = 1; i <= 3; i++) {
                         let nextDate = new Date(startDateObj);
                         nextDate.setDate(startDateObj.getDate() + (i * 7));
                         datesToCreate.push(nextDate.toISOString().split('T')[0]);
                     }
-                } else if (recurrence === 'BIWEEKLY') { // 15 días (4 envíos = 2 meses)
+                } else if (recurrence === 'BIWEEKLY') {
                     for (let i = 1; i <= 3; i++) {
                         let nextDate = new Date(startDateObj);
                         nextDate.setDate(startDateObj.getDate() + (i * 15));
                         datesToCreate.push(nextDate.toISOString().split('T')[0]);
                     }
-                } else if (recurrence === 'MONTHLY') { // 3 meses
+                } else if (recurrence === 'MONTHLY') {
                     for (let i = 1; i <= 2; i++) {
                         let nextDate = new Date(startDateObj);
                         nextDate.setMonth(startDateObj.getMonth() + i);
@@ -1382,18 +1404,38 @@
                 }
             }
 
+            // CREACIÓN DE ENVIOS Y SUS REPORTES AUTOMÁTICOS (+2 DÍAS HÁBILES)
             datesToCreate.forEach((d, idx) => {
+                const mailingId = Date.now() + (idx * 2);
+                
+                // 1. Crear el Evento de Envío
                 db.collection("contentItems").add({
-                    id: Date.now() + idx,
+                    id: mailingId,
                     type,
-                    title: datesToCreate.length > 1 ? `${title} (Envío ${idx + 1})` : title,
+                    title: datesToCreate.length > 1 ? `${title} (${idx + 1})` : title,
                     date: d,
-                    duration,
+                    duration: 1,
                     location,
                     owners,
                     notes,
                     recurrence
                 });
+
+                // 2. Si es Mailing, Generar Automáticamente el Evento de Reporte a los 2 Días Hábiles
+                if (type === 'MAILING') {
+                    const reportDate = addBusinessDays(d, 2);
+                    db.collection("contentItems").add({
+                        id: mailingId + 1,
+                        type,
+                        title: datesToCreate.length > 1 ? `${title} (${idx + 1})` : title,
+                        date: reportDate,
+                        duration: 1,
+                        location: 'Reporte de Métricas',
+                        owners,
+                        notes: `Entrega automática de métricas para el envío del ${d}`,
+                        isReport: true
+                    });
+                }
             });
         }
 
