@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --orange-primary: #FF5100;
+            --orange-primary: #FF5500;
             --orange-primary-hover: #E04B00;
             --orange-light: #FFF2EC;
             --orange-card-bg: linear-gradient(135deg, #FF5500 0%, #E04B00 100%);
@@ -364,7 +364,7 @@
         .btn-action-pill:hover { background: var(--orange-light); color: var(--orange-primary); border-color: #FFD8C7; }
         .btn-action-pill.btn-delete:hover { background: var(--stat-red-bg); color: var(--stat-red); border-color: #FCA5A5; }
 
-        /* VISTA CALENDARIO */
+        /* VISTA CALENDARIO GRID CON DRAG AND DROP Y EVENTOS MULTIDÍAS */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -492,6 +492,25 @@
         .team-card-dropzone.drag-over-team {
             border: 2px dashed var(--orange-primary) !important;
             background: #FFF5EE !important;
+        }
+
+        /* Estilo Botón Outline para Editar Tarea */
+        .icon-btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-card);
+            border-radius: 6px;
+            padding: 4px 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .icon-btn-outline:hover {
+            border-color: var(--orange-primary);
+            color: var(--orange-primary);
+            background: var(--orange-light);
         }
 
         /* Modal Formulario */
@@ -702,7 +721,6 @@
                         <option value="VERDE">En Tiempo (Verde)</option>
                         <option value="AMARILLO">Próxima (Amarillo)</option>
                         <option value="ROJO">Atrasada (Rojo)</option>
-
                         <option value="EN PROCESO">En Proceso 🔵</option>
                         <option value="EN ESPERA">En Revisión / En Espera</option>
                         <option value="COMPLETADO">Completado</option>
@@ -835,7 +853,6 @@
                 <textarea class="form-control" id="taskDesc" rows="2" placeholder="Detalles principales..." required></textarea>
             </div>
 
-            <!-- NUEVO CAMPO DE DETALLES/NOTAS PARA LAS TAREAS -->
             <div class="form-group">
                 <label>Notas / Detalles Adicionales (Opcional)</label>
                 <textarea class="form-control" id="taskNotes" rows="3" placeholder="Briefing, especificaciones técnicas, enlaces o recordatorios..."></textarea>
@@ -1620,7 +1637,6 @@
         }
     }
 
-    // DRAG AND DROP TAREAS ENTRE INTEGRANTES DEL EQUIPO
     function onDragTaskStart(e, taskId) {
         draggedTaskId = taskId;
         e.dataTransfer.setData('text/plain', taskId);
@@ -1715,23 +1731,46 @@
             let taskItems = memberTasks.map(t => {
                 const days = calculateDaysRemaining(t.dueDate);
                 let daysColor = days < 0 ? 'var(--stat-red)' : (days <= 3 ? 'var(--stat-yellow)' : 'var(--stat-green)');
+                const currentState = t.state || 'Pendiente';
                 
                 return `
                     <div class="task-team-card" 
                          draggable="true" 
                          ondragstart="onDragTaskStart(event, '${t.id}')"
-                         style="background: #F8F8FC; padding: 12px; border-radius: 12px; border: 1px solid var(--border-card); margin-bottom: 10px; cursor: grab;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                         style="background: #F8F8FC; padding: 12px; border-radius: 12px; border: 1px solid var(--border-card); margin-bottom: 10px; cursor: grab; position: relative;">
+                        
+                        <!-- BOTÓN EDITAR SVG OUTLINE EN LA ESQUINA SUPERIOR DERECHA -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                             <span class="id-badge" style="font-size: 10px; padding: 2px 6px;">${t.id}</span>
-                            <span style="font-size: 11px; font-weight: 800; color: ${daysColor};">${days} d rest.</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="font-size: 11px; font-weight: 800; color: ${daysColor};">${days} d rest.</span>
+                                <button class="icon-btn-outline" title="Editar Tarea" onclick="openModal('${t.id}')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
+
                         <p style="font-size: 12.5px; font-weight: 700; color: var(--text-main); line-height: 1.3; margin-bottom: 4px;">${t.desc}</p>
                         ${t.notes ? `<p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">📝 ${t.notes}</p>` : ''}
                         
-                        <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; border-top: 1px solid #E4E4E7; padding-top: 8px;">
-                            <button class="btn-action-pill" style="font-size: 10px; padding: 3px 6px;" onclick="openModal('${t.id}')">✏️ Editar</button>
-                            <button class="btn-action-pill" style="font-size: 10px; padding: 3px 6px; background: #DBEAFE; color: #1E40AF;" onclick="updateTaskStateDirect('${t.id}', 'En Proceso')">🔵 En Proceso</button>
-                            <button class="btn-action-pill" style="font-size: 10px; padding: 3px 6px; background: #D1FAE5; color: #065F46;" onclick="updateTaskStateDirect('${t.id}', 'Completado')">✅ Listo</button>
+                        <!-- FILA DE ACCIONES DESACOPLADAS -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #E4E4E7; padding-top: 8px;">
+                            <!-- SELECTOR DE ESTATUS A LA IZQUIERDA -->
+                            <select style="background: white; border: 1px solid var(--border-card); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 6px; outline: none; cursor: pointer; color: var(--text-muted);" 
+                                    onchange="updateTaskStateDirect('${t.id}', this.value)">
+                                <option value="Pendiente" ${currentState === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="En Proceso" ${currentState === 'En Proceso' ? 'selected' : ''}>En Proceso 🔵</option>
+                                <option value="En Revisión / En Espera" ${currentState === 'En Revisión / En Espera' ? 'selected' : ''}>En Espera 🟣</option>
+                            </select>
+
+                            <!-- BOTÓN COMPLETADO A LA DERECHA -->
+                            <button class="btn-action-pill" style="font-size: 10.5px; padding: 4px 8px; background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0;" 
+                                    onclick="updateTaskStateDirect('${t.id}', 'Completado')">
+                                ✅ Listo
+                            </button>
                         </div>
                     </div>
                 `;
