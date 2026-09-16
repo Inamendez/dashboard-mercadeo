@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latin Pagos Mercadeo - Dashboard</title>
+    <title>Latin Pagos Mercadeo - Dashboard Pro</title>
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAAuVJREFUeAHtlktsEkEYx/9DTEPihT1ohItQb2BibRsPSlJ8XbSNnjy3njyY2Ist6UXq3cfBgze9qlFbH+dCgk1qUgVTOTTy0ESwXkCjglhY55th2YHdbuVkD/yT5ZudfXz/+X4zswB99dXXfxaz65yJzsWg4xp60IUvLzDy/V0vjxTYUwRcdleYzsYohsPHEJ29KuJ28tY3gL1+4PoScOMtsNsDXL4n2wcjwPgV4G6ex+lWEsQpWAxMT8c8OvSIpmmYGD8DTfNgcDDgmFz78w2+GjcwdUsmCwwBxyeBE5Oy7efHxdvS4JFzxmMJWwNu9+YQRZ93X7svl8vBSYPVj7JByUn5FE96yP7m9wkZm1tUoKE3z1MMhYLtvmw2Dycd+PVJjpTKTiqkTDNfC3LkbQNx+k2xBRRsDbjAhHVvqwLVWg2lUglOEhUIRcyOfNpMWkh3VmMtTvxTZj5FKn+fzyf6cjnn0RN/OhAaMzuNSpBWFmR1SEv3ZWRYNC7vUl82MLAZodjNf2L8LEZHh/Hs+Uusrr5RH7Hnv2e/eQPhuDPF+/ymgYZZgQ4DOmtGaGNQ+ZPC4aNytJoH3Qr9WHfmT4byKfWRNn9SBwIGuf5V/prHTGqHw/d7o5P/WsLkLydctxLqSbsCxB+oD3XzN9rGOVWjWq0JFF6e3MKfKkAjp+PBvDW9Sy4/iwE7/sViEadPnWwll3PBwEEGxOhJKn86LjlsXI1OA20EjOlii1L51zgCQ1k+epqIJGNZ2vJ3Vpzzr9ga0AGxVrbiT2bcbrdofy5KA2IDUvmvLGIbpbs7hIFoNObnFhz5q8pkMoK/u1mz8neSjgVbAw3UIxS717/xERLtgMm1yCsgRk9S+dPEc5bFoZiELv755TsgypWKmHhU7mRyGSPDh8VNDx89RjAY5BXxIvlqGeVyBaGf6/INrxflVkubjbMs/EniD8nM7BwtcD960PyHmxLBv4phnj1BDH311ddO018L9Slk2AMiAgAAAABJRU5ErkJggg==">
     
@@ -364,7 +364,6 @@
         .btn-action-pill:hover { background: var(--orange-light); color: var(--orange-primary); border-color: #FFD8C7; }
         .btn-action-pill.btn-delete:hover { background: var(--stat-red-bg); color: var(--stat-red); border-color: #FCA5A5; }
 
-        /* VISTA CALENDARIO GRID CON DRAG AND DROP Y EVENTOS MULTIDÍAS */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -494,7 +493,6 @@
             background: #FFF5EE !important;
         }
 
-        /* Estilo Botón Outline para Editar Tarea */
         .icon-btn-outline {
             background: transparent;
             border: 1px solid var(--border-card);
@@ -513,7 +511,6 @@
             background: var(--orange-light);
         }
 
-        /* Modal Formulario */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -617,7 +614,7 @@
         </div>
 
         <div class="header-actions">
-            <button class="btn-primary" onclick="openModal()">
+            <button class="btn-primary" onclick="openModalByDocId()">
                 <span>+</span> Nueva Actividad
             </button>
             <div class="user-profile">
@@ -829,7 +826,7 @@
             <button class="close-modal" onclick="closeModal()">&times;</button>
         </div>
         <form id="taskForm" onsubmit="saveTask(event)">
-            <input type="hidden" id="taskId">
+            <input type="hidden" id="taskIdDoc">
 
             <div class="form-group">
                 <label>Área Solicitante</label>
@@ -989,7 +986,7 @@
     currentNavDate.setDate(1);
 
     let draggedEventId = null;
-    let draggedTaskId = null;
+    let draggedTaskIdDoc = null;
 
     let statusChartInstance = null;
     let areasChartInstance = null;
@@ -1115,8 +1112,8 @@
                 <td><span class="badge-status ${badgeClass}">${badgeText}</span></td>
                 <td style="text-align: right;">
                     <div class="action-btns">
-                        <button class="btn-action-pill" onclick="editTask('${t.id}')">✏️ Editar</button>
-                        <button class="btn-action-pill btn-delete" onclick="deleteTask('${t.id}')">🗑️</button>
+                        <button class="btn-action-pill" onclick="openModalByDocId('${t.idDoc}')">✏️ Editar</button>
+                        <button class="btn-action-pill btn-delete" onclick="deleteTaskByDocId('${t.idDoc}', '${t.id}')">🗑️</button>
                     </div>
                 </td>
             `;
@@ -1558,23 +1555,26 @@
         }
     }
 
-    function openModal(id = null) {
+    // AHORA BUSCAMOS EXACTAMENTE POR EL idDoc UNICO DE FIRESTORE
+    function openModalByDocId(idDoc = null) {
         document.getElementById('taskModal').style.display = 'flex';
-        if (id) {
-            const t = tasks.find(x => x.id === id);
-            document.getElementById('modalTitle').innerText = 'Editar Actividad';
-            document.getElementById('taskId').value = t.id;
-            document.getElementById('taskArea').value = t.area;
-            document.getElementById('taskDesc').value = t.desc;
-            document.getElementById('taskNotes').value = t.notes || '';
-            document.getElementById('taskResp').value = t.resp;
-            document.getElementById('taskState').value = t.state;
-            document.getElementById('taskReqDate').value = t.reqDate || '';
-            document.getElementById('taskDueDate').value = t.dueDate;
+        if (idDoc) {
+            const t = tasks.find(x => x.idDoc === idDoc);
+            if (t) {
+                document.getElementById('modalTitle').innerText = `Editar Actividad (${t.id})`;
+                document.getElementById('taskIdDoc').value = t.idDoc;
+                document.getElementById('taskArea').value = t.area;
+                document.getElementById('taskDesc').value = t.desc;
+                document.getElementById('taskNotes').value = t.notes || '';
+                document.getElementById('taskResp').value = t.resp;
+                document.getElementById('taskState').value = t.state;
+                document.getElementById('taskReqDate').value = t.reqDate || '';
+                document.getElementById('taskDueDate').value = t.dueDate;
+            }
         } else {
             document.getElementById('modalTitle').innerText = 'Nueva Actividad';
             document.getElementById('taskForm').reset();
-            document.getElementById('taskId').value = '';
+            document.getElementById('taskIdDoc').value = '';
         }
     }
 
@@ -1584,7 +1584,7 @@
 
     function saveTask(e) {
         e.preventDefault();
-        const id = document.getElementById('taskId').value;
+        const idDoc = document.getElementById('taskIdDoc').value;
         const area = document.getElementById('taskArea').value;
         const desc = document.getElementById('taskDesc').value;
         const notes = document.getElementById('taskNotes').value.trim();
@@ -1593,13 +1593,10 @@
         const reqDate = document.getElementById('taskReqDate').value;
         const dueDate = document.getElementById('taskDueDate').value;
 
-        if (id) {
-            const existingTask = tasks.find(t => t.id === id);
-            if (existingTask && existingTask.idDoc) {
-                db.collection("tasks").doc(existingTask.idDoc).update({
-                    area, desc, notes, resp, state, reqDate, dueDate
-                });
-            }
+        if (idDoc) {
+            db.collection("tasks").doc(idDoc).update({
+                area, desc, notes, resp, state, reqDate, dueDate
+            });
         } else {
             const prefix = AREA_PREFIXES[area] || 'ACT';
             const count = tasks.filter(t => t.area === area).length + 1;
@@ -1611,35 +1608,23 @@
         switchTab('dashboard', document.querySelectorAll('.tab-btn')[0]);
     }
 
-    function editTask(id) { openModal(id); }
-
-    function updateTaskStateDirect(id, newState) {
-        const existingTask = tasks.find(t => t.id === id);
-        if (existingTask && existingTask.idDoc) {
-            db.collection("tasks").doc(existingTask.idDoc).update({ state: newState });
+    function updateTaskStateDirectByDocId(idDoc, newState) {
+        if (idDoc) {
+            db.collection("tasks").doc(idDoc).update({ state: newState });
         }
     }
 
-    function deleteTask(id) {
-        if (confirm(`¿Eliminar la tarea ${id}?`)) {
-            const t = tasks.find(x => x.id === id);
-            if (t) {
-                if (t.idDoc) {
-                    db.collection("tasks").doc(t.idDoc).delete();
-                } else {
-                    db.collection("tasks").where("id", "==", id).get().then(snapshot => {
-                        snapshot.forEach(doc => doc.ref.delete());
-                    });
-                }
+    function deleteTaskByDocId(idDoc, idVisible) {
+        if (confirm(`¿Eliminar la tarea ${idVisible}?`)) {
+            if (idDoc) {
+                db.collection("tasks").doc(idDoc).delete();
             }
-            tasks = tasks.filter(x => x.id !== id);
-            renderTable();
         }
     }
 
-    function onDragTaskStart(e, taskId) {
-        draggedTaskId = taskId;
-        e.dataTransfer.setData('text/plain', taskId);
+    function onDragTaskStart(e, idDoc) {
+        draggedTaskIdDoc = idDoc;
+        e.dataTransfer.setData('text/plain', idDoc);
     }
 
     function renderTeamAnalytics() {
@@ -1736,15 +1721,14 @@
                 return `
                     <div class="task-team-card" 
                          draggable="true" 
-                         ondragstart="onDragTaskStart(event, '${t.id}')"
+                         ondragstart="onDragTaskStart(event, '${t.idDoc}')"
                          style="background: #F8F8FC; padding: 12px; border-radius: 12px; border: 1px solid var(--border-card); margin-bottom: 10px; cursor: grab; position: relative;">
                         
-                        <!-- BOTÓN EDITAR SVG OUTLINE EN LA ESQUINA SUPERIOR DERECHA -->
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
                             <span class="id-badge" style="font-size: 10px; padding: 2px 6px;">${t.id}</span>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <span style="font-size: 11px; font-weight: 800; color: ${daysColor};">${days} d rest.</span>
-                                <button class="icon-btn-outline" title="Editar Tarea" onclick="openModal('${t.id}')">
+                                <button class="icon-btn-outline" title="Editar Tarea" onclick="openModalByDocId('${t.idDoc}')">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -1756,19 +1740,16 @@
                         <p style="font-size: 12.5px; font-weight: 700; color: var(--text-main); line-height: 1.3; margin-bottom: 4px;">${t.desc}</p>
                         ${t.notes ? `<p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">📝 ${t.notes}</p>` : ''}
                         
-                        <!-- FILA DE ACCIONES DESACOPLADAS -->
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid #E4E4E7; padding-top: 8px;">
-                            <!-- SELECTOR DE ESTATUS A LA IZQUIERDA -->
                             <select style="background: white; border: 1px solid var(--border-card); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 3px 6px; outline: none; cursor: pointer; color: var(--text-muted);" 
-                                    onchange="updateTaskStateDirect('${t.id}', this.value)">
+                                    onchange="updateTaskStateDirectByDocId('${t.idDoc}', this.value)">
                                 <option value="Pendiente" ${currentState === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
                                 <option value="En Proceso" ${currentState === 'En Proceso' ? 'selected' : ''}>En Proceso 🔵</option>
                                 <option value="En Revisión / En Espera" ${currentState === 'En Revisión / En Espera' ? 'selected' : ''}>En Espera 🟣</option>
                             </select>
 
-                            <!-- BOTÓN COMPLETADO A LA DERECHA -->
                             <button class="btn-action-pill" style="font-size: 10.5px; padding: 4px 8px; background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0;" 
-                                    onclick="updateTaskStateDirect('${t.id}', 'Completado')">
+                                    onclick="updateTaskStateDirectByDocId('${t.idDoc}', 'Completado')">
                                 ✅ Listo
                             </button>
                         </div>
@@ -1805,11 +1786,8 @@
     function onDropTaskOnTeam(e, newMember) {
         e.preventDefault();
         document.querySelectorAll('.team-card-dropzone').forEach(el => el.classList.remove('drag-over-team'));
-        if (draggedTaskId) {
-            const task = tasks.find(t => t.id === draggedTaskId);
-            if (task && task.idDoc) {
-                db.collection("tasks").doc(task.idDoc).update({ resp: newMember });
-            }
+        if (draggedTaskIdDoc) {
+            db.collection("tasks").doc(draggedTaskIdDoc).update({ resp: newMember });
         }
     }
 
