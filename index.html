@@ -1126,7 +1126,8 @@
     function updateDashboard(allProcessedTasks) {
         const activeTasks = allProcessedTasks.filter(t => t.state !== 'Completado');
 
-        let total = allProcessedTasks.length;
+        // TOTAL TAREAS AHORA SOLO CUENTA LAS TAREAS ACTIVAS PENDIENTES
+        let total = activeTasks.length;
         let verde = activeTasks.filter(t => t.semaforo === 'VERDE').length;
         let amarillo = activeTasks.filter(t => t.semaforo === 'AMARILLO').length;
         let rojo = activeTasks.filter(t => t.semaforo === 'ROJO').length;
@@ -1555,7 +1556,7 @@
         }
     }
 
-    // AHORA BUSCAMOS EXACTAMENTE POR EL idDoc UNICO DE FIRESTORE
+    // BUSCAR EXACTAMENTE POR EL idDoc UNICO DE FIRESTORE
     function openModalByDocId(idDoc = null) {
         document.getElementById('taskModal').style.display = 'flex';
         if (idDoc) {
