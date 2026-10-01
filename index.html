@@ -697,6 +697,24 @@
                 <div class="box-title">Matriz Operativa de Actividades</div>
             </div>
 
+            <!-- CONTADOR DE TAREAS Y ENTREGAS POR ÁREA / RANGO -->
+            <div id="areaMetricsSummary" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="background: #F8F8FC; border: 1px solid var(--border-card); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">📋</span>
+                    <div>
+                        <p style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Solicitadas</p>
+                        <p id="cntSolicitadas" style="font-size: 16px; font-weight: 800; color: var(--text-main);">0</p>
+                    </div>
+                </div>
+                <div style="background: #F8F8FC; border: 1px solid var(--border-card); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 18px;">✅</span>
+                    <div>
+                        <p style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Entregadas / Listas</p>
+                        <p id="cntEntregadas" style="font-size: 16px; font-weight: 800; color: var(--stat-green);">0</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="filter-bar">
                 <div class="search-box">
                     <span class="search-icon-svg">🔍</span>
@@ -737,6 +755,16 @@
                         <option value="Ashley Pereira (Diseñadora)">Ashley Pereira</option>
                         <option value="Jesús Farías (Diseñador)">Jesús Farías</option>
                     </select>
+                </div>
+
+                <!-- FILTRO OPCIONAL POR RANGO DE FECHAS DESHABILITADO POR DEFECTO -->
+                <div style="display: flex; align-items: center; gap: 10px; background: #F8F8FC; border: 1px solid var(--border-card); padding: 8px 14px; border-radius: 10px; flex-wrap: wrap;">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="enableDateFilter" onchange="toggleDateInputs(); renderTable();"> 📅 Filtrar por Fecha
+                    </label>
+                    <input type="date" id="filterDateFrom" class="select-filter" style="padding: 6px 10px; font-size: 12px;" disabled onchange="renderTable()">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 700;">a</span>
+                    <input type="date" id="filterDateTo" class="select-filter" style="padding: 6px 10px; font-size: 12px;" disabled onchange="renderTable()">
                 </div>
             </div>
 
@@ -901,11 +929,11 @@
     </div>
 </div>
 
-<!-- Modal Formulario de Pautas -->
+<!-- Modal Formulario Simplificado Exclusivo para Mailtrap y Pautas -->
 <div class="modal-overlay" id="contentModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 id="contentModalTitle">Nueva Pauta / Evento / Mailing</h3>
+            <h3 id="contentModalTitle">Nueva Pauta / Evento / Mailing / Reunión</h3>
             <button class="close-modal" onclick="closeContentModal()">&times;</button>
         </div>
         <form id="contentForm" onsubmit="saveContentItem(event)">
@@ -913,7 +941,7 @@
 
             <div class="form-group">
                 <label>Tipo de Evento / Actividad</label>
-                <select class="form-control" id="contentType" required>
+                <select class="form-control" id="contentType" onchange="toggleMailingRecurrenceField()" required>
                     <option value="GRABACIÓN">📹 Pauta de Grabación (Video/Fotos)</option>
                     <option value="RRSS">📱 Publicación RRSS (Reel/Parrilla)</option>
                     <option value="MAILING">📧 Mailing (Envío Mailtrap)</option>
@@ -929,10 +957,11 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label id="contentDateLabel">Fecha Inicio</label>
+                    <label id="contentDateLabel">Fecha de Envío (Mailtrap)</label>
                     <input type="date" class="form-control" id="contentDate" required>
                 </div>
-                <div class="form-group">
+
+                <div class="form-group" id="contentDurationGroup">
                     <label>Duración (Días Continuos)</label>
                     <input type="number" class="form-control" id="contentDuration" value="1" min="1" max="14">
                 </div>
@@ -948,9 +977,9 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Hora / Lugar / Canal</label>
-                <input type="text" class="form-control" id="contentLocation" placeholder="Ej: 10:00 AM - Agencia Chacao o Email BNC">
+            <div class="form-group" id="contentLocationGroup">
+                <label id="contentLocationLabel">Hora / Lugar / Canal</label>
+                <input type="text" class="form-control" id="contentLocation" placeholder="Ej: 10:00 AM - Email Masivo Mailtrap">
             </div>
 
             <div class="form-group">
@@ -965,8 +994,8 @@
             </div>
 
             <div class="form-group">
-                <label>Detalles / Guión / Fechas de Reporte</label>
-                <textarea class="form-control" id="contentNotes" rows="3" placeholder="Puntos clave, fecha de envío y día de entrega de reporte de métricas..."></textarea>
+                <label id="contentNotesLabel">Detalles / Guión / Asunto</label>
+                <textarea class="form-control" id="contentNotes" rows="3" placeholder="Notas adicionales del envío o reunión..."></textarea>
             </div>
 
             <div class="modal-footer">
@@ -1063,13 +1092,32 @@
 
         const filterResp = document.getElementById('filterResp').value;
 
+        const isDateFilterActive = document.getElementById('enableDateFilter') ? document.getElementById('enableDateFilter').checked : false;
+        const dateFrom = document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '';
+        const dateTo = document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '';
+
         let filtered = processed.filter(t => {
             const matchesSearch = (t.desc || '').toLowerCase().includes(search) || (t.resp || '').toLowerCase().includes(search) || (t.id || '').toLowerCase().includes(search) || (t.notes || '').toLowerCase().includes(search);
             const matchesArea = filterArea === 'ALL' || t.area === filterArea;
             const matchesStatus = filterStatus === 'ALL' || t.semaforo === filterStatus || t.state === filterStatus;
             const matchesResp = filterResp === 'ALL' || t.resp === filterResp;
-            return matchesSearch && matchesArea && matchesStatus && matchesResp;
+
+            let matchesDate = true;
+            if (isDateFilterActive) {
+                const taskDate = t.reqDate || t.dueDate;
+                if (dateFrom && taskDate < dateFrom) matchesDate = false;
+                if (dateTo && taskDate > dateTo) matchesDate = false;
+            }
+
+            return matchesSearch && matchesArea && matchesStatus && matchesResp && matchesDate;
         });
+
+        // Calcular Recuento de Solicitadas vs Entregadas según los filtros aplicados (por área/rango)
+        const totalSolicitadas = filtered.length;
+        const totalEntregadas = filtered.filter(t => t.state === 'Completado').length;
+
+        if (document.getElementById('cntSolicitadas')) document.getElementById('cntSolicitadas').innerText = totalSolicitadas;
+        if (document.getElementById('cntEntregadas')) document.getElementById('cntEntregadas').innerText = totalEntregadas;
 
         tbody.innerHTML = '';
         filtered.forEach(t => {
@@ -1341,6 +1389,16 @@
 
     function togglePersonChip(element, personName) {
         element.classList.toggle('selected');
+    }
+
+    function toggleDateInputs() {
+        const checkbox = document.getElementById('enableDateFilter');
+        const fromInput = document.getElementById('filterDateFrom');
+        const toInput = document.getElementById('filterDateTo');
+        if (checkbox && fromInput && toInput) {
+            fromInput.disabled = !checkbox.checked;
+            toInput.disabled = !checkbox.checked;
+        }
     }
 
     function toggleMailingRecurrenceField() {
